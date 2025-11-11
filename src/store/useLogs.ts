@@ -4,7 +4,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import 'react-native-get-random-values';
 import { v4 as uuid } from 'uuid';
-import type { LogEntry, FeedAmount } from '../../src/types/log';
+import type { LogEntry, PoopAmount, FeedAmount } from '../../src/types/log';
 
 type State = {
   logs: LogEntry[];
@@ -12,7 +12,7 @@ type State = {
 };
 
 type Actions = {
-  addPoop: () => void;
+  addPoop: (amount?: PoopAmount) => void;
   addFeed: (amount?: FeedAmount) => void;
   startSleep: () => void;
   endSleep: () => void; // pairs with active start
@@ -32,8 +32,10 @@ export const useLogs = create<State & Actions>()(
       logs: [],
       activeSleepId: undefined,
 
-      addPoop: () =>
-        set((s) => ({ logs: [...s.logs, { id: uuid(), kind: 'poop', createdAt: nowISO() }] })),
+      addPoop: (amount) =>
+        set((s) => ({
+          logs: [...s.logs, { id: uuid(), kind: 'poop', amount, createdAt: nowISO() }],
+        })),
 
       addFeed: (amount) =>
         set((s) => ({

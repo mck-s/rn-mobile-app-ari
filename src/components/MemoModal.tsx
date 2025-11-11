@@ -1,80 +1,88 @@
-// src/features/home/components/MemoModal.tsx
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   Modal,
   View,
   Text,
   TextInput,
   Pressable,
+  StyleSheet,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 
-type Props = {
+// Custom gradient component using View layers
+const GradientView = ({ colors, style, children }: any) => (
+  <View style={[style, { backgroundColor: colors[0], overflow: 'hidden' }]}>
+    <View
+      style={{
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: colors[1],
+        opacity: 0.6,
+      }}
+    />
+    {children}
+  </View>
+);
+
+interface MemoModalProps {
   visible: boolean;
   onClose: () => void;
   onSave: (text: string) => void;
-};
+}
 
-export const MemoModal: React.FC<Props> = ({ visible, onClose, onSave }) => {
-  const [memoText, setMemoText] = useState('');
-
-  const wordCount = useMemo(() => {
-    return memoText.trim() ? memoText.trim().split(/\s+/).length : 0;
-  }, [memoText]);
-
-  const overLimit = wordCount > 100;
-  const canSave = memoText.trim().length > 0 && !overLimit;
+export function MemoModal({ visible, onClose, onSave }: MemoModalProps) {
+  const [text, setText] = useState('');
 
   const handleSave = () => {
-    if (!canSave) return;
-    onSave(memoText.trim());
-    setMemoText('');
+    if (text.trim()) {
+      onSave(text.trim());
+      setText('');
+      onClose();
+    }
+  };
+
+  const handleClose = () => {
+    setText('');
     onClose();
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        className="flex-1 w-full items-center justify-center"
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.modalOverlay}
       >
-        {/* background overlay */}
-        <Pressable className="absolute inset-0 bg-black/40" onPress={onClose} />
+        <Pressable style={styles.backdrop} onPress={handleClose}>
+          <View style={[StyleSheet.absoluteFill, styles.backdropBlur]} />
+        </Pressable>
 
-        {/* centered card */}
-        <View className="w-11/12 max-w-md bg-white rounded-2xl p-5 shadow-lg">
-          <Text className="text-lg font-semibold mb-2 text-center">Add memo</Text>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add a Note</Text>
+              <Text style={styles.modalSubtitle}>Record a special moment</Text>
+            </View>
 
-          <TextInput
-            className="border border-gray-300 rounded-lg p-3 h-28 text-base"
-            placeholder="Write a quick memo (max 100 words)…"
-            value={memoText}
-            onChangeText={setMemoText}
-            multiline
-            maxLength={1200}
-            autoFocus
-          />
+            <TextInput
+              style={styles.textInput}
+              placeholder="What's happening with baby?"
+              placeholderTextColor="#B8B8B8"
+              value={text}
+              onChangeText={setText}
+              multiline
+              numberOfLines={4}
+              autoFocus
+            />
 
-          <View className="mt-3 flex-row justify-between items-center">
-            <Text className={`text-xs ${overLimit ? 'text-red-600' : 'text-gray-500'}`}>
-              {wordCount}/100 words
-            </Text>
-            <View className="flex-row gap-4">
-              <Pressable
-                onPress={() => {
-                  setMemoText('');
-                  onClose();
-                }}
-              >
-                <Text className="text-gray-600 font-medium">Cancel</Text>
+            <View style={styles.buttonRow}>
+              <Pressable onPress={handleClose} style={styles.cancelButton}>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
               </Pressable>
-              <Pressable
-                onPress={handleSave}
-                disabled={!canSave}
-                className={`px-4 py-2 rounded-full ${canSave ? 'bg-blue-500' : 'bg-gray-300'}`}
-              >
-                <Text className="text-white font-semibold">Save</Text>
+
+              <Pressable onPress={handleSave} style={styles.saveButton}>
+                <GradientView colors={['#FFB6D9', '#FF8FB9']} style={styles.saveButtonGradient}>
+                  <Text style={styles.saveButtonText}>Save Note</Text>
+                </GradientView>
               </Pressable>
             </View>
           </View>
@@ -82,4 +90,82 @@ export const MemoModal: React.FC<Props> = ({ visible, onClose, onSave }) => {
       </KeyboardAvoidingView>
     </Modal>
   );
-};
+}
+
+const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  backdropBlur: {
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  },
+  modalContainer: {
+    width: '90%',
+    maxWidth: 400,
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 28,
+    padding: 24,
+  },
+  modalHeader: {
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1A1A1A',
+    marginBottom: 4,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#8B8B8B',
+    fontWeight: '500',
+  },
+  textInput: {
+    backgroundColor: '#F8F8F8',
+    borderRadius: 16,
+    padding: 16,
+    fontSize: 15,
+    color: '#1A1A1A',
+    minHeight: 120,
+    textAlignVertical: 'top',
+    marginBottom: 20,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  cancelButton: {
+    flex: 1,
+    paddingVertical: 16,
+    borderRadius: 16,
+    backgroundColor: '#F5F5F5',
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#5A5A5A',
+  },
+  saveButton: {
+    flex: 1,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  saveButtonGradient: {
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+});

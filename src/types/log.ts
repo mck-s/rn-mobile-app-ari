@@ -1,7 +1,7 @@
 // src/types/log.ts
 export type LogKind = 'poop' | 'feed' | 'sleepStart' | 'sleepEnd' | 'memo';
-
-export type FeedAmount = 'a-lot' | 'normal' | 'barely';
+export type PoopAmount = 'a lot' | 'normal' | 'just pee';
+export type FeedAmount = 'a lot' | 'normal' | 'barely';
 
 export type BaseLog = {
   id: string; // uuid
@@ -9,7 +9,7 @@ export type BaseLog = {
   createdAt: string; // ISO string (UTC)
 };
 
-export type PoopLog = BaseLog & { kind: 'poop' };
+export type PoopLog = BaseLog & { kind: 'poop'; amount?: PoopAmount };
 export type FeedLog = BaseLog & { kind: 'feed'; amount?: FeedAmount };
 export type SleepStartLog = BaseLog & { kind: 'sleepStart' };
 export type SleepEndLog = BaseLog & { kind: 'sleepEnd'; startId: string }; // links to start
